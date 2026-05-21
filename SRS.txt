@@ -1,0 +1,403 @@
+# Software Requirements Specification
+
+## Simple Airbnb-like Rental Booking System
+
+**Backend:** FastAPI
+**Frontend:** React
+
+---
+
+## 1. Purpose
+
+This system allows users to browse rental properties, view details, make bookings, and manage reservations. Hosts can list properties and manage bookings. Admins can monitor users, listings, and bookings.
+
+---
+
+## 2. Scope
+
+The system is a simplified Airbnb-style platform with:
+
+* User registration and login
+* Property listing and browsing
+* Search and filtering
+* Property detail pages
+* Booking creation
+* Host listing management
+* Admin management
+* Basic payment-status tracking, not real payment integration
+
+---
+
+## 3. User Roles
+
+| Role       | Description                                         |
+| ---------- | --------------------------------------------------- |
+| Guest/User | Can search properties, view details, and book stays |
+| Host       | Can create, edit, and delete property listings      |
+| Admin      | Can manage users, listings, and bookings            |
+
+---
+
+## 4. Core Features
+
+## 4.1 Authentication
+
+### Requirements
+
+* Users can register using name, email, password, and role.
+* Users can log in using email and password.
+* System returns JWT access token after login.
+* Passwords must be hashed.
+* Protected routes require authentication.
+
+### API Examples
+
+| Method | Endpoint         | Description      |
+| ------ | ---------------- | ---------------- |
+| POST   | `/auth/register` | Register user    |
+| POST   | `/auth/login`    | Login            |
+| GET    | `/auth/me`       | Get current user |
+
+---
+
+## 4.2 User Management
+
+### Requirements
+
+* Users can view and update their profile.
+* Admin can view all users.
+* Admin can deactivate users.
+
+### API Examples
+
+| Method | Endpoint                       | Description          |
+| ------ | ------------------------------ | -------------------- |
+| GET    | `/users/me`                    | Get own profile      |
+| PUT    | `/users/me`                    | Update own profile   |
+| GET    | `/admin/users`                 | Admin gets all users |
+| PATCH  | `/admin/users/{id}/deactivate` | Deactivate user      |
+
+---
+
+## 4.3 Property Listings
+
+### Requirements
+
+Hosts can create listings with:
+
+* Title
+* Description
+* Location
+* Price per night
+* Number of guests
+* Number of bedrooms
+* Number of bathrooms
+* Amenities
+* Images
+* Availability status
+
+Users can browse all active listings.
+
+### API Examples
+
+| Method | Endpoint           | Description            |
+| ------ | ------------------ | ---------------------- |
+| GET    | `/properties`      | List/search properties |
+| GET    | `/properties/{id}` | Get property detail    |
+| POST   | `/properties`      | Host creates property  |
+| PUT    | `/properties/{id}` | Host updates property  |
+| DELETE | `/properties/{id}` | Host deletes property  |
+
+---
+
+## 4.4 Search and Filtering
+
+### Requirements
+
+Users can filter listings by:
+
+* Location
+* Check-in date
+* Check-out date
+* Price range
+* Number of guests
+* Property type
+* Amenities
+
+### Example Query
+
+```http
+GET /properties?location=Kathmandu&guests=2&min_price=30&max_price=100
+```
+
+---
+
+## 4.5 Booking Management
+
+### Requirements
+
+Users can book a property by selecting:
+
+* Property
+* Check-in date
+* Check-out date
+* Number of guests
+
+System must:
+
+* Check availability
+* Prevent overlapping bookings
+* Calculate total price
+* Store booking status
+
+Booking statuses:
+
+* `pending`
+* `confirmed`
+* `cancelled`
+* `completed`
+
+### API Examples
+
+| Method | Endpoint                | Description                              |
+| ------ | ----------------------- | ---------------------------------------- |
+| POST   | `/bookings`             | Create booking                           |
+| GET    | `/bookings/me`          | User views own bookings                  |
+| GET    | `/host/bookings`        | Host views bookings for their properties |
+| PATCH  | `/bookings/{id}/cancel` | Cancel booking                           |
+
+---
+
+## 4.6 Reviews and Ratings
+
+### Requirements
+
+* Users can review a property after completed booking.
+* Review includes rating from 1 to 5 and comment.
+* Average rating is shown on property detail page.
+
+### API Examples
+
+| Method | Endpoint                   | Description   |
+| ------ | -------------------------- | ------------- |
+| POST   | `/reviews`                 | Create review |
+| GET    | `/properties/{id}/reviews` | Get reviews   |
+
+---
+
+## 5. Frontend Requirements
+
+## 5.1 Pages
+
+| Page                  | Description                                        |
+| --------------------- | -------------------------------------------------- |
+| Home Page             | Search bar and featured listings                   |
+| Login Page            | User login                                         |
+| Register Page         | User signup                                        |
+| Property Listing Page | Shows filtered properties                          |
+| Property Detail Page  | Shows property info, images, reviews, booking form |
+| User Dashboard        | Shows user bookings                                |
+| Host Dashboard        | Manage listings and bookings                       |
+| Admin Dashboard       | Manage platform data                               |
+
+---
+
+## 5.2 React Components
+
+| Component          | Purpose                    |
+| ------------------ | -------------------------- |
+| `Navbar`           | Navigation and auth links  |
+| `PropertyCard`     | Display listing preview    |
+| `SearchBar`        | Search/filter input        |
+| `PropertyDetails`  | Full property information  |
+| `BookingForm`      | Check-in/check-out booking |
+| `ReviewList`       | Display reviews            |
+| `HostPropertyForm` | Create/edit property       |
+| `DashboardLayout`  | Shared dashboard layout    |
+
+---
+
+## 6. Database Entities
+
+## 6.1 User
+
+```text
+id
+name
+email
+password_hash
+role
+is_active
+created_at
+updated_at
+```
+
+## 6.2 Property
+
+```text
+id
+host_id
+title
+description
+location
+price_per_night
+max_guests
+bedrooms
+bathrooms
+property_type
+is_active
+created_at
+updated_at
+```
+
+## 6.3 PropertyImage
+
+```text
+id
+property_id
+image_url
+```
+
+## 6.4 Amenity
+
+```text
+id
+name
+```
+
+## 6.5 PropertyAmenity
+
+```text
+property_id
+amenity_id
+```
+
+## 6.6 Booking
+
+```text
+id
+user_id
+property_id
+check_in
+check_out
+guests
+total_price
+status
+created_at
+updated_at
+```
+
+## 6.7 Review
+
+```text
+id
+user_id
+property_id
+booking_id
+rating
+comment
+created_at
+```
+
+---
+
+## 7. Business Rules
+
+* A user cannot book their own property.
+* A booking cannot overlap with another confirmed booking.
+* Check-out date must be after check-in date.
+* Reviews are allowed only after completed bookings.
+* Only hosts can create listings.
+* Only the property owner can edit or delete their listing.
+* Admin can deactivate users or listings.
+* Cancelled bookings should not block availability.
+
+---
+
+## 8. Non-Functional Requirements
+
+## 8.1 Security
+
+* Passwords must be hashed using bcrypt.
+* JWT must be used for authentication.
+* Role-based access control is required.
+* Backend must validate all inputs.
+* CORS must allow only approved frontend domains.
+
+## 8.2 Performance
+
+* Property search should respond within 1 second for normal load.
+* Pagination should be used for listing pages.
+* Images should be stored externally or served through object storage.
+
+## 8.3 Reliability
+
+* Booking creation must be transaction-safe.
+* Duplicate bookings must be prevented.
+* API errors must return clear status codes and messages.
+
+## 8.4 Scalability
+
+* Backend should follow modular FastAPI structure.
+* Database indexes should exist on:
+
+  * `property.location`
+  * `booking.property_id`
+  * `booking.check_in`
+  * `booking.check_out`
+  * `user.email`
+
+---
+
+## 9. Suggested Tech Stack
+
+| Layer         | Technology                      |
+| ------------- | ------------------------------- |
+| Frontend      | React, TypeScript, React Router |
+| UI            | Tailwind CSS or Material UI     |
+| State         | React Query / TanStack Query    |
+| Backend       | FastAPI                         |
+| ORM           | SQLAlchemy                      |
+| Database      | PostgreSQL                      |
+| Auth          | JWT                             |
+| Validation    | Pydantic                        |
+| Migrations    | Alembic                         |
+| Image Storage | S3-compatible storage           |
+| Deployment    | Docker, Nginx, AWS/GCP/Azure    |
+
+---
+
+## 10. Example API Response
+
+```json
+{
+  "id": 1,
+  "title": "Cozy Apartment in Kathmandu",
+  "location": "Kathmandu",
+  "price_per_night": 45,
+  "max_guests": 2,
+  "bedrooms": 1,
+  "bathrooms": 1,
+  "average_rating": 4.6,
+  "images": [
+    "https://example.com/image1.jpg"
+  ]
+}
+```
+
+---
+
+## 11. Acceptance Criteria
+
+The system is acceptable when:
+
+* Users can register and log in.
+* Guests can search and view properties.
+* Hosts can create, update, and delete listings.
+* Users can create bookings.
+* The system prevents double bookings.
+* Users can view booking history.
+* Hosts can view bookings for their properties.
+* Reviews can be submitted after completed bookings.
+* Admin can manage users, listings, and bookings.
+* Frontend communicates successfully with FastAPI backend.

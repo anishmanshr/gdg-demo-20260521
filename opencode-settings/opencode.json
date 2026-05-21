@@ -1,0 +1,124 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "plan",
+  "small_model": "deepseek/deepseek-v4-flash",
+  "instructions": ["AGENTS.md"],
+
+  "compaction": {
+    "auto": true,
+    "tail_turns": 5,
+    "preserve_recent_tokens": 12000
+  },
+
+  "tool_output": {
+    "max_lines": 3000,
+    "max_bytes": 80000
+  },
+
+  "formatter": {
+    "python": {
+      "command": ["ruff", "format", "--stdin-filename", "$FILE"],
+      "extensions": ["py"]
+    },
+    "typescript": {
+      "command": ["npx", "prettier", "--stdin-filepath", "$FILE"],
+      "extensions": ["ts", "tsx", "js", "jsx", "json", "md"]
+    }
+  },
+
+  "lsp": {
+    "pyright": {
+      "command": ["pyright-langserver", "--stdio"],
+      "extensions": ["py"]
+    },
+    "typescript": {
+      "command": ["typescript-language-server", "--stdio"],
+      "extensions": ["ts", "tsx", "js", "jsx"]
+    }
+  },
+
+  "watcher": {
+    "ignore": [
+      "node_modules/",
+      "__pycache__/",
+      ".opencode/node_modules/",
+      "*.pyc",
+      ".DS_Store",
+      "coverage/",
+      "dist/",
+      "build/"
+    ]
+  },
+
+  "permission": {
+    "edit": "allow",
+    "bash": {
+      "*": "allow"
+    },
+    "external_directory": {
+      "*": "ask"
+    },
+    "webfetch": "allow",
+    "websearch": "deny"
+  },
+
+  "experimental": {
+    "batch_tool": true
+  },
+
+  "agent": {
+    "plan": {
+      "model": "deepseek/deepseek-v4-pro",
+      "description": "Read-only architect for the Document Translation Platform. Before planning, explore relevant docs from docs/architecture/ and docs/frontend/. Produces structured plans with file paths, module responsibilities, and phase compliance. After plan, prompt user to switch to build mode."
+    },
+    "build": {
+      "model": "deepseek/deepseek-v4-pro",
+      "description": "Implements approved plans for the Document Translation Platform. Delegates coding to backend-builder and frontend-builder subagents. After code, always launches convention-reviewer, test-author, and docs-writer. Never skips review, tests, or docs steps."
+    },
+    "explore": {
+      "model": "deepseek/deepseek-v4-flash",
+      "description": "Reads and synthesizes the Document Translation Platform codebase and documentation. For documentation research, load the quick-reference tables from fastapi-backend and frontend-app skills to know which docs to read."
+    }
+  },
+
+  "mcp": {
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "-y", "@playwright/mcp"],
+      "enabled": true
+    }
+  },
+
+  "command": {
+    "feature": {
+      "description": "Build a feature end-to-end: research -> code -> review -> test -> docs",
+      "agent": "build",
+      "template": "Implement the following feature following the full workflow (backend-builder, frontend-builder, convention-reviewer, test-author, docs-writer): $ARGS"
+    },
+    "review": {
+      "description": "Review current changes against all project conventions",
+      "agent": "convention-reviewer",
+      "template": "Audit all unstaged and staged changes against project conventions"
+    },
+    "docs": {
+      "description": "Generate or update documentation for recent code changes",
+      "agent": "docs-writer",
+      "template": "Update all project documentation to reflect recent code changes. $ARGS"
+    },
+    "tickets": {
+      "description": "Bootstrap tickets from feature-matrix.md — creates GitHub Issues for all unscoped work",
+      "agent": "ticket-manager",
+      "template": "Bootstrap tickets: read docs/features/feature-matrix.md, identify unscoped Phase 1 features, create GitHub Issues as epics and child tasks following the project-management skill conventions."
+    },
+    "ticket-status": {
+      "description": "Show status of all open tickets",
+      "agent": "ticket-manager",
+      "template": "Show all open GitHub Issues with labels, status, and phase grouping."
+    },
+    "ticket-next": {
+      "description": "Show the next unassigned ticket",
+      "agent": "ticket-manager",
+      "template": "Show the next unassigned Backlog ticket ordered by phase priority."
+    }
+  }
+}
